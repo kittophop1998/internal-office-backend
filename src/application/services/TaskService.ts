@@ -10,7 +10,7 @@ export class TaskService {
         const inputToSave = {
             title: input.title,
             type: input.type,
-            subtype: input.subType,
+            subtype: input.subtype,
             description: input.description,
             weight: input.weight,
             position_id: input.positionId,
