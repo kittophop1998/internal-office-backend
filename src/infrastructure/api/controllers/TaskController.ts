@@ -110,7 +110,7 @@ export class TaskController {
 
     async getTaskSessions(req: Request, res: Response) {
         try {
-            const userId = 1;
+            const userId = res.locals.user.id;
             const branchId = Number(req.query.branchId);
             const type = req.query.type as string;
             const sessions = await this.taskService.getTaskSessions(userId, type, branchId);

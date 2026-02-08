@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 
-interface UserMetadata {
+export interface UserMetadata {
     id: number;
     username: string;
     full_name: string;

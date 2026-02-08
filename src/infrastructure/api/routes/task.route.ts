@@ -2,6 +2,7 @@ import { Router } from "express";
 import { TaskRepository } from "../../database/TaskRepository";
 import { TaskService } from "../../../application/services/TaskService";
 import { TaskController } from "../controllers/TaskController";
+import { authMiddleware } from "../middlewares/authMiddleware";
 
 export function setupTaskRoute() {
     const router = Router();
@@ -28,7 +29,7 @@ export function setupTaskRoute() {
     router.get("/", (req, res) => taskController.getTasks(req, res));
 
     router.get("/sessions/check/:userId", (req, res) => taskController.checkTaskSessionExists(req, res));
-    router.get("/sessions", (req, res) => taskController.getTaskSessions(req, res));
+    router.get("/sessions", authMiddleware, (req, res) => taskController.getTaskSessions(req, res));
     router.post("/sessions", (req, res) => taskController.createTaskSession(req, res));
     router.put("/sessions/:id", (req, res) => taskController.updateTaskSession(req, res));
 
