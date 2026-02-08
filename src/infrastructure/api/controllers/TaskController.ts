@@ -113,7 +113,15 @@ export class TaskController {
             const userId = res.locals.user.id;
             const branchId = Number(req.query.branchId);
             const type = req.query.type as string;
-            const sessions = await this.taskService.getTaskSessions(userId, type, branchId);
+            const subtype = req.query.subtype as string ?? null;
+
+            const filter = {
+                userId,
+                type,
+                subtype,
+                branchId
+            };
+            const sessions = await this.taskService.getTaskSessions(filter);
 
             ResponseUtil.success(res, sessions, 'Sessions retrieved successfully');
         }catch (error: any) {

@@ -110,14 +110,8 @@ export class TaskService {
         return await this.taskRepository.isTaskSessionExists(userId, date);
     }
 
-    async getTaskSessions(userId: number, type: string, branchId: number): Promise<any[]> {
-        const date = dayjs().startOf('day').toDate();
-        const isExists = await this.taskRepository.isTaskSessionExists(userId, date);
-        if (!isExists) {
-            throw new Error("No task sessions found for this user, date, and branch.");
-        }
-
-        return await this.taskRepository.getTaskSessions(userId, type, branchId);
+    async getTaskSessions(filter: any): Promise<any[]> {
+        return await this.taskRepository.getTaskSessions(filter);
     }
 
     async updateTaskSessionStatus(sessionId: number, status: string): Promise<void> {

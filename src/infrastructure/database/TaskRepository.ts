@@ -142,8 +142,8 @@ export class TaskRepository implements ITaskRepository {
         return !!session;
     }
 
-    async getTaskSessions(userId: number, type: string, branchId: number): Promise<any[]> {
-        const sessions = await db
+    async getTaskSessions(filter:any): Promise<any[]> {
+        let query = await db
             .selectFrom("task_sessions")
             .innerJoin("tasks", "task_sessions.task_id", "tasks.id")
             .leftJoin("task_session_attachments", "task_sessions.id", "task_session_attachments.task_session_id")
@@ -158,12 +158,17 @@ export class TaskRepository implements ITaskRepository {
                 "task_sessions.score as session_score",
                 "task_sessions.manager_comment"
             ])
-            .where("user_id", "=", userId)
-            .where("task_sessions.type", "=", type as 'DAILY' | 'WEEKLY' | 'MONTHLY')
-            .where("task_sessions.branch_id", "=", branchId)
+            .where("user_id", "=", filter.userId)
+            .where("task_sessions.type", "=", filter.type as 'DAILY' | 'WEEKLY' | 'MONTHLY')
+            .where("task_sessions.branch_id", "=", filter.branchId)
             .where("task_sessions.deleted_at", "is", null)
-            .where("tasks.deleted_at", "is", null)
-            .execute();
+            .where("tasks.deleted_at", "is", null);
+
+        if (filter.subtype) {
+            query = query.where("tasks.subtype", "=", filter.subtype as 'pre-opening' | 'pre-closing');
+        }
+
+        const sessions = await query.execute();
 
         return sessions;
     }
