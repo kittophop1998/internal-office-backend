@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { ResponseUtil } from '../utils/Response';
 import { TaskService } from '../../../application/services/TaskService';
+import { AuthenticatedRequest } from '../middlewares/authMiddleware';
 
 export class TaskController {
     constructor(
@@ -46,7 +47,7 @@ export class TaskController {
             const task = await this.taskService.getTaskById(taskId);
 
             ResponseUtil.success(res, task, 'Task retrieved successfully');
-        }catch (error: any) {
+        } catch (error: any) {
             ResponseUtil.error(res, 'Failed to retrieve task', 500, error.message);
         }
     }
@@ -57,7 +58,7 @@ export class TaskController {
             await this.taskService.delete(taskId);
 
             ResponseUtil.success(res, null, 'Task deleted successfully');
-        }catch(error: any) {
+        } catch (error: any) {
             ResponseUtil.error(res, 'Task deletion failed', 500, error.message);
         }
     }
@@ -79,38 +80,47 @@ export class TaskController {
             await this.taskService.assignTask(assignmentData);
 
             ResponseUtil.success(res, null, 'Task assigned successfully');
-        }catch(error: any) {
+        } catch (error: any) {
             ResponseUtil.error(res, 'Task assignment failed', 500, error.message);
         }
     }
 
-    async createTaskSession(req: Request, res: Response) {
+    // ##### Controller For Tasks Sessions
+    async createTaskSession(req: AuthenticatedRequest, res: Response) {
         try {
-            const userId = 1;
-            const type = req.query.type as string;
-            const branchId = Number(req.query.branchId);
+            const userId = Number(req.user?.id);
+            const type = req.body.type as string;
+            const branchId = Number(req.body.branchId);
             await this.taskService.createTaskSession(userId, type, branchId);
 
             ResponseUtil.success(res, null, 'Session created successfully');
-        }catch (error: any) {
+        } catch (error: any) {
             ResponseUtil.error(res, 'Session creation failed', 500, error.message);
         }
     }
 
-    async checkTaskSessionExists(_: Request, res: Response) {
+    async checkTaskSessionExists(req: AuthenticatedRequest, res: Response) {
         try {
-            const userId = 1;
-            const exists = await this.taskService.checkTaskSessionExists(userId);
+            const userId = Number(req.user?.id);
+            const branchId = Number(req.query.branchId);
+            const type = req.query.type as string;
+
+            const filter = {
+                userId,
+                type,
+                branchId
+            };
+            const exists = await this.taskService.checkTaskSessionExists(filter);
 
             ResponseUtil.success(res, { exists }, 'Session existence checked successfully');
-        }catch(error: any) {
+        } catch (error: any) {
             ResponseUtil.error(res, 'Failed to check session existence', 500, error.message);
         }
     }
 
-    async getTaskSessions(req: Request, res: Response) {
+    async getTaskSessions(req: AuthenticatedRequest, res: Response) {
         try {
-            const userId = res.locals.user.id;
+            const userId = Number(req.user?.id);
             const branchId = Number(req.query.branchId);
             const type = req.query.type as string;
             const subtype = req.query.subtype as string ?? null;
@@ -124,20 +134,78 @@ export class TaskController {
             const sessions = await this.taskService.getTaskSessions(filter);
 
             ResponseUtil.success(res, sessions, 'Sessions retrieved successfully');
-        }catch (error: any) {
+        } catch (error: any) {
             ResponseUtil.error(res, 'Failed to retrieve sessions', 500, error.message);
         }
     }
 
     async updateTaskSession(req: Request, res: Response) {
         try {
-            const sessionId = Number(req.params.id);
-            const { status } = req.body;
-            await this.taskService.updateTaskSessionStatus(sessionId, status);
+            const sessions = req.body as Array<{
+                sessionId: number;
+                status: string;
+                attachmentId?: number;
+            }>;
 
-            ResponseUtil.success(res, null, 'Task session updated successfully');
-        }catch(error: any) {
+            await this.taskService.updateTaskSession(sessions);
+
+            ResponseUtil.success(res, null, 'Task sessions updated successfully');
+        } catch (error: any) {
             ResponseUtil.error(res, 'Task session update failed', 500, error.message);
+        }
+    }
+
+    async uploadImageTaskSession(req: Request, res: Response) {
+        try {
+            const taskSessionId = Number(req.params.id);
+            const files = req.files as Express.Multer.File[];
+
+            if (!files || files.length === 0) {
+                ResponseUtil.error(res, 'No files uploaded', 400);
+                return;
+            }
+
+            if (files.length > 3) {
+                ResponseUtil.error(res, 'Maximum 3 files allowed', 400);
+                return;
+            }
+
+            const uploadedUrls = await this.taskService.uploadTaskSessionImages(taskSessionId, files);
+
+            ResponseUtil.success(res, { uploadedUrls }, 'Task session images uploaded successfully');
+        } catch (error: any) {
+            ResponseUtil.error(res, 'Task session image upload failed', 500, error.message);
+        }
+    }
+
+    // ##### Controller For Tasks Session Review
+    async getTaskSessionForReview(req: Request, res: Response) {
+        try {
+            const branchId = Number(req.query.branchId);
+            const type = req.query.type?.toString() as 'DAILY' | 'WEEKLY' | 'MONTHLY';
+            const positionId = Number(req.query.positionId);
+
+            const filter = {
+                branchId,
+                positionId,
+                type,
+                status: 'COMPLETED'
+            };
+            const tasks = await this.taskService.getTaskSessions(filter);
+
+            ResponseUtil.success(res, tasks, 'Tasks for review retrieved successfully');
+        } catch (error: any) {
+            ResponseUtil.error(res, 'Failed to retrieve tasks for review', 500, error.message);
+        }
+    }
+
+    async updateTaskForReview(req: Request, res: Response) {
+        try {
+            await this.taskService.updateTaskSession(req.body);
+
+            ResponseUtil.success(res, null, 'Task for review updated successfully');
+        } catch (error: any) {
+            ResponseUtil.error(res, 'Failed to update task for review', 500, error.message);
         }
     }
 }

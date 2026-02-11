@@ -1,5 +1,6 @@
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import { config } from '../config';
 import { router } from './routes';
 
@@ -15,12 +16,25 @@ export class App {
     private setupMiddlewares() {
         this.app.use(express.json());
         this.app.use(express.urlencoded({ extended: true }));
+        this.app.use(cookieParser());
+
+        const allowedOrigins = [
+            'http://localhost:3000',
+            'http://localhost:5173',
+        ];
 
         this.app.use(cors({
-            origin: '*',
-            credentials: false,
+            origin: (origin, callback) => {
+                if (!origin || allowedOrigins.includes(origin)) {
+                    callback(null, true);
+                } else {
+                    callback(new Error('Not allowed by CORS'));
+                }
+            },
+            credentials: true,
             methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-            allowedHeaders: ['Content-Type', 'Authorization']
+            allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+            exposedHeaders: ['Set-Cookie']
         }));
     };
 

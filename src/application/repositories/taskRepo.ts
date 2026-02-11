@@ -9,8 +9,8 @@ export interface ITaskRepository {
     assignTask(input: any): Promise<void>;
 
     createTaskSession(input: any): Promise<void>;
-    isTaskSessionExists(userId: number, date: Date): Promise<boolean>;
+    isTaskSessionExists(filter: any, date: Date): Promise<boolean>;
     getTaskSessions(filter: any): Promise<any[]>;
-    updateTaskSessionStatus(sessionId: number, status: string): Promise<void>;
+    updateTaskSessions(inputs: any[]): Promise<void>;
     taskSessionAttachments(taskSessionId: number, image_url: string): Promise<void>;
 }

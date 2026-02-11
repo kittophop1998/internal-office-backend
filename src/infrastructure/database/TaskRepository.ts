@@ -129,11 +129,13 @@ export class TaskRepository implements ITaskRepository {
             .execute();
     }
 
-    async isTaskSessionExists(userId: number, date: Date): Promise<boolean> {
+    async isTaskSessionExists(filter: any, date: Date): Promise<boolean> {
         const session = await db
             .selectFrom("task_sessions")
             .selectAll()
-            .where("user_id", "=", userId)
+            .where("user_id", "=", filter.userId)
+            .where("type", "=", filter.type as 'DAILY' | 'WEEKLY' | 'MONTHLY')
+            .where("branch_id", "=", filter.branchId)
             .where("session_date", "=", date)
             .where("status", "!=", 'COMPLETED')
             .where("deleted_at", "is", null)
@@ -142,11 +144,43 @@ export class TaskRepository implements ITaskRepository {
         return !!session;
     }
 
-    async getTaskSessions(filter:any): Promise<any[]> {
+    async getTaskSessions(filter: any): Promise<any[]> {
+        const today = dayjs().startOf('day').toDate();
+
         let query = await db
             .selectFrom("task_sessions")
             .innerJoin("tasks", "task_sessions.task_id", "tasks.id")
+            .innerJoin("users", "task_sessions.user_id", "users.id")
             .leftJoin("task_session_attachments", "task_sessions.id", "task_session_attachments.task_session_id")
+            .where("task_sessions.session_date", "=", today)
+            .where("task_sessions.deleted_at", "is", null)
+            .where("tasks.deleted_at", "is", null);
+
+        if(filter.userId) {
+            query = query.where("task_sessions.user_id", "=", filter.userId);
+        }
+
+        if (filter.type) {
+            query = query.where("task_sessions.type", "=", filter.type as 'DAILY' | 'WEEKLY' | 'MONTHLY');
+        }
+
+        if (filter.subtype) {
+            query = query.where("tasks.subtype", "=", filter.subtype as 'pre-opening' | 'pre-closing');
+        }
+
+        if (filter.branchId) {
+            query = query.where("task_sessions.branch_id", "=", filter.branchId);
+        }
+
+        if (filter.positionId) {
+            query = query.where("users.position_id", "=", filter.positionId);
+        }
+
+        if (filter.status) {
+            query = query.where("task_sessions.status", "=", filter.status as 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'APPROVED' | 'REJECTED');
+        }
+
+        const sessions = await query
             .select([
                 "task_sessions.id as session_id",
                 "task_sessions.session_date",
@@ -154,31 +188,33 @@ export class TaskRepository implements ITaskRepository {
                 "tasks.id as task_id",
                 "tasks.title as task_title",
                 "tasks.description as task_description",
-                "task_session_attachments.file_url as attachment_url",
                 "task_sessions.score as session_score",
-                "task_sessions.manager_comment"
+                "task_sessions.manager_comment",
+                "task_session_attachments.id as attachment_id",
+                "task_session_attachments.file_url as attachment_url",
+                "users.id as user_id",
+                "users.full_name as user_name"
             ])
-            .where("user_id", "=", filter.userId)
-            .where("task_sessions.type", "=", filter.type as 'DAILY' | 'WEEKLY' | 'MONTHLY')
-            .where("task_sessions.branch_id", "=", filter.branchId)
-            .where("task_sessions.deleted_at", "is", null)
-            .where("tasks.deleted_at", "is", null);
-
-        if (filter.subtype) {
-            query = query.where("tasks.subtype", "=", filter.subtype as 'pre-opening' | 'pre-closing');
-        }
-
-        const sessions = await query.execute();
+            .execute();
 
         return sessions;
     }
 
-    async updateTaskSessionStatus(sessionId: number, status: string): Promise<void> {
-        await db
-            .updateTable("task_sessions")
-            .set({ status: status as 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'APPROVED' | 'REJECTED', updated_at: new Date() })
-            .where("id", "=", sessionId)
-            .execute();
+    async updateTaskSessions(inputs: any[]): Promise<void> {
+        await db.transaction().execute(async (trx) => {
+            for (const input of inputs) {
+                const { session_id, ...updateData } = input;
+
+                await trx
+                    .updateTable("task_sessions")
+                    .set({
+                        ...updateData,
+                        updated_at: dayjs().toDate()
+                    })
+                    .where("id", "=", session_id)
+                    .execute();
+            }
+        });
     }
 
     async taskSessionAttachments(taskSessionId: number, image_url: string): Promise<void> {
