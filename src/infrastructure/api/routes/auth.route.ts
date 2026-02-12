@@ -22,6 +22,7 @@ export function setupAuthRoute() {
     const authController = new AuthController(authService);
 
     router.post('/login', (req, res) => authController.login(req, res));
+    router.post('/logout', (req, res) => authController.logout(req, res));
 
     return router;
 }

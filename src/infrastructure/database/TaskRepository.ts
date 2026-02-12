@@ -3,11 +3,17 @@ import { ITaskRepository } from "../../application/repositories/taskRepo";
 import { db } from "./maria";
 
 export class TaskRepository implements ITaskRepository {
-    async create(input: any): Promise<void> {
-        await db
+    async create(input: any): Promise<number> {
+        const result = await db
             .insertInto("tasks")
             .values(input)
-            .execute();
+            .executeTakeFirst();
+
+        if (!result?.insertId) {
+            throw new Error("Insert failed");
+        }
+
+        return Number(result.insertId);
     }
 
     async update(taskId: number, input: any): Promise<void> {
@@ -116,10 +122,14 @@ export class TaskRepository implements ITaskRepository {
     }
 
     async assignTask(input: any): Promise<void> {
-        await db
-            .insertInto("task_assignments")
-            .values(input)
-            .execute();
+        await db.transaction().execute(async (trx) => {
+            for (const item of input) {
+                await trx
+                    .insertInto("task_assignments")
+                    .values(item)
+                    .execute();
+            }
+        });
     }
 
     async createTaskSession(input: any): Promise<void> {
@@ -137,7 +147,6 @@ export class TaskRepository implements ITaskRepository {
             .where("type", "=", filter.type as 'DAILY' | 'WEEKLY' | 'MONTHLY')
             .where("branch_id", "=", filter.branchId)
             .where("session_date", "=", date)
-            .where("status", "!=", 'COMPLETED')
             .where("deleted_at", "is", null)
             .executeTakeFirst();
 
@@ -156,7 +165,7 @@ export class TaskRepository implements ITaskRepository {
             .where("task_sessions.deleted_at", "is", null)
             .where("tasks.deleted_at", "is", null);
 
-        if(filter.userId) {
+        if (filter.userId) {
             query = query.where("task_sessions.user_id", "=", filter.userId);
         }
 

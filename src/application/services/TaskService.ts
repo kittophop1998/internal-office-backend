@@ -7,21 +7,32 @@ export class TaskService {
         private taskRepository: ITaskRepository
     ) { }
 
-    async create(input: any): Promise<void> {
+    async create(userId: number, input: any): Promise<void> {
         const inputToSave = {
             title: input.title,
             type: input.type,
             subtype: input.subtype,
             description: input.description,
             weight: input.weight,
-            position_id: input.positionId,
+            position_id: input.positionId ?? 3,
             sort_order: input.sortOrder,
             created_at: dayjs().toDate(),
             updated_at: dayjs().toDate(),
             deleted_at: null
         };
 
-        await this.taskRepository.create(inputToSave);
+        const taskId = await this.taskRepository.create(inputToSave);
+        const taskAssigns = input.users.map((item: any) => ({
+            task_id: taskId,
+            user_id: item,
+            assigned_at: dayjs().toDate(),
+            assigned_by: userId,
+            created_at: dayjs().toDate(),
+            updated_at: dayjs().toDate(),
+            deleted_at: null
+        }));
+
+        await this.taskRepository.assignTask(taskAssigns);
     }
 
     async update(taskId: number, input: any): Promise<void> {
@@ -114,12 +125,10 @@ export class TaskService {
     async getTaskSessions(filter: any): Promise<any[]> {
         const sessions = await this.taskRepository.getTaskSessions(filter);
 
-        // Group sessions by session_id and collect attachments into an array
         const groupedSessions = sessions.reduce((acc: any, curr: any) => {
             const existingSession = acc.find((s: any) => s.session_id === curr.session_id);
 
             if (existingSession) {
-                // Add attachment to existing session if it exists and not already added
                 if (curr.attachment_id && !existingSession.attachments.some((a: any) => a.attachment_id === curr.attachment_id)) {
                     existingSession.attachments.push({
                         attachment_id: curr.attachment_id,
@@ -127,7 +136,6 @@ export class TaskService {
                     });
                 }
             } else {
-                // Create new session entry with attachments array
                 const attachments = curr.attachment_id
                     ? [{ attachment_id: curr.attachment_id, attachment_url: curr.attachment_url }]
                     : [];

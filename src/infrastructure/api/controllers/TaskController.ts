@@ -8,10 +8,12 @@ export class TaskController {
         private taskService: TaskService
     ) { }
 
-    async create(req: Request, res: Response) {
+    async create(req: AuthenticatedRequest, res: Response) {
         try {
+            const userId = Number(req.user?.id);
+            console.log(`Creating task for user ID: ${userId}`); // Debugging line
             const taskData = req.body;
-            await this.taskService.create(taskData);
+            await this.taskService.create(userId, taskData);
 
             ResponseUtil.success(res, null, 'Task created successfully');
         } catch (error: any) {

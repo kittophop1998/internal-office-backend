@@ -1,5 +1,5 @@
 export interface ITaskRepository {
-    create(input: any): Promise<void>;
+    create(input: any): Promise<number>;
     update(taskId: number, input: any): Promise<void>;
     getTasks(filter?: any): Promise<any[]>;
     getTaskById(taskId: number): Promise<any>;

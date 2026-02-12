@@ -6,22 +6,29 @@ export interface AuthenticatedRequest extends Request {
 	user?: UserMetadata;
 }
 
+const COOKIE_NAME = 'accessToken';
+
 export const authMiddleware = (
 	req: AuthenticatedRequest,
 	res: Response,
 	next: NextFunction
 ): void => {
-	const authHeader = req.headers.authorization;
+	// ลองดึง token จาก cookie ก่อน
+	let token = req.cookies?.[COOKIE_NAME];
 
-	if (!authHeader) {
-		ResponseUtil.unauthorized(res, 'Authorization header is required');
-		return;
+	// ถ้าไม่มีใน cookie ให้ลองดูจาก Authorization header (fallback)
+	if (!token) {
+		const authHeader = req.headers.authorization;
+		if (authHeader) {
+			const [scheme, headerToken] = authHeader.split(' ');
+			if (scheme === 'Bearer' && headerToken) {
+				token = headerToken;
+			}
+		}
 	}
 
-	const [scheme, token] = authHeader.split(' ');
-
-	if (scheme !== 'Bearer' || !token) {
-		ResponseUtil.unauthorized(res, 'Invalid authorization format');
+	if (!token) {
+		ResponseUtil.unauthorized(res, 'Authentication required');
 		return;
 	}
 
