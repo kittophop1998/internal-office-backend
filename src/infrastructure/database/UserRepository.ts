@@ -70,7 +70,23 @@ export class UserRepository implements IUserRepository {
     async findById(id: number): Promise<any | null> {
         const user = await db
             .selectFrom('users')
-            .selectAll()
+            .innerJoin('positions', 'users.position_id', 'positions.id')
+            .innerJoin('departments', 'users.department_id', 'departments.id')
+            .leftJoin('branches', 'users.branch_id', 'branches.id')
+            .select([
+                'users.id as id',
+                'users.username as username',
+                'users.full_name as full_name',
+                'users.email as email',
+                'users.department_id as department_id',
+                'users.position_id as position_id',
+                'users.branch_id as branch_id',
+                'positions.code as position_code',
+                'positions.title as position_title',
+                'departments.name as department_name',
+                'branches.name as branch_name',
+                'branches.location as branch_location',
+            ])
             .where('id', '=', id)
             .executeTakeFirst();
 

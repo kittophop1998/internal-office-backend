@@ -29,12 +29,19 @@ export class UserService {
     }
 
     async updateUserProfile(userId: number, profileData: Partial<any>) {
+        const userToSave = {
+            full_name: profileData.fullName,
+            email: profileData.email,
+            department_id: profileData.departmentId,
+            position_id: profileData.positionId,
+        };
+
         const user = await this.userRepository.findById(userId);
         if (!user) {
             throw new Error('User not found');
         }
 
-        Object.assign(user, profileData);
+        Object.assign(user, userToSave);
 
         await this.userRepository.update(user);
     }

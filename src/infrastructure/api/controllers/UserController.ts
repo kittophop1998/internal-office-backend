@@ -25,19 +25,42 @@ export class UserController {
             await this.userService.updateUserProfile(userId, profileData);
 
             ResponseUtil.success(res, null, 'User profile updated successfully');
-        }catch (error: any) {
+        } catch (error: any) {
             ResponseUtil.error(res, 'Failed to update user profile', 500, error.message);
         }
     }
 
     async getUsers(req: Request, res: Response) {
-        try {   
+        try {
             const filters = req.query;
             const users = await this.userService.getUsers(filters);
 
             ResponseUtil.success(res, users, 'Users retrieved successfully');
-        }catch(error: any) {
+        } catch (error: any) {
             ResponseUtil.error(res, 'Failed to retrieve users', 500, error.message);
+        }
+    }
+
+    async getUserById(req: Request, res: Response) {
+        try {
+            const userId = Number(req.params.id);
+            const user = await this.userService.getUserProfile(userId);
+
+            ResponseUtil.success(res, user, 'User retrieved successfully');
+        } catch (error: any) {
+            ResponseUtil.error(res, 'Failed to retrieve user', 500, error.message);
+        }
+    }
+
+    async updateUserById(req: Request, res: Response) {
+        try {
+            const userId = Number(req.params.id);
+            const userData = req.body;
+            await this.userService.updateUserProfile(userId, userData);
+
+            ResponseUtil.success(res, null, 'User updated successfully');
+        } catch (error: any) {
+            ResponseUtil.error(res, 'Failed to update user', 500, error.message);
         }
     }
 }
