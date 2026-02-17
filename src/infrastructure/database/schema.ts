@@ -5,7 +5,7 @@ import {
 
 export interface Database {
   users: UserTable
-  positions: PositionTable
+  roles: RoleTable
   departments: DepartmentTable
   branches: BranchTable
   tasks: TaskTable
@@ -21,8 +21,7 @@ export interface UserTable {
   full_name: string
   email: string
   department_id: number | null
-  position_id: number | null
-  role: 'ADMIN' | 'STAFF' | 'MANAGER'
+  role_id: number | null
   branch_id: number | null
   created_at: Generated<Date>
   updated_at: Date
@@ -80,10 +79,10 @@ export interface TaskSessionAttachmentTable {
   created_at: Generated<Date>
 }
 
-export interface PositionTable {
+export interface RoleTable {
   id: Generated<number>
   code: string
-  title: string
+  name: string
   description: string
   created_at: Generated<Date>
   updated_at: Date
@@ -109,7 +108,7 @@ export interface BranchTable {
 }
 
 export type User = Selectable<UserTable>
-export type Position = Selectable<PositionTable>
+export type Role = Selectable<RoleTable>
 export type Task = Selectable<TaskTable>
 export type TaskSession = Selectable<TaskSessionTable>
 export type Department = Selectable<DepartmentTable>

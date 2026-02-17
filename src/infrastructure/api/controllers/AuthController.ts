@@ -20,7 +20,6 @@ export class AuthController {
 
             const result = await this.authService.login({ username, password });
 
-            // Set HTTP-only cookie with the token
             res.cookie(this.COOKIE_NAME, result.accessToken, {
                 httpOnly: true,           // ป้องกัน JavaScript access (XSS protection)
                 secure: process.env.NODE_ENV === 'production', // HTTPS only in production

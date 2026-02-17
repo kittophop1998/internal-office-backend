@@ -2,10 +2,10 @@ import { Kysely, sql } from 'kysely'
 
 export async function up(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable('positions')
+    .createTable('roles')
     .addColumn('id', 'integer', (col) => col.autoIncrement().primaryKey())
     .addColumn('code', 'varchar(50)', (col) => col.notNull())
-    .addColumn('title', 'varchar(255)', (col) => col.notNull())
+    .addColumn('name', 'varchar(255)', (col) => col.notNull())
     .addColumn('description', 'text', (col) => col.notNull())
     .addColumn('created_at', 'timestamp', (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`).notNull())
     .addColumn('updated_at', 'timestamp', (col) => col.defaultTo(sql`CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`).notNull())
@@ -40,8 +40,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn('full_name', 'varchar(255)', (col) => col.notNull())
     .addColumn('email', 'varchar(255)', (col) => col.notNull().unique())
     .addColumn('department_id', 'integer', (col) => col)
-    .addColumn('position_id', 'integer', (col) => col.notNull())
-    .addColumn('role', 'varchar(20)', (col) => col.notNull().defaultTo('STAFF'))
+    .addColumn('role_id', 'integer', (col) => col.notNull())
     .addColumn('branch_id', 'integer')
     .addColumn('created_at', 'timestamp', (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`).notNull())
     .addColumn('updated_at', 'timestamp', (col) => col.defaultTo(sql`CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`).notNull())
@@ -56,7 +55,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn('type', 'varchar(20)', (col) => col.notNull())
     .addColumn('subtype', 'varchar(50)', (col) => col.notNull())
     .addColumn('created_at', 'timestamp', (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`).notNull())
-    .addColumn('weight', 'integer', (col) => col.notNull())
+    .addColumn('weight', sql.raw('decimal(5,2)'), (col) => col.notNull())
     .addColumn('sort_order', 'integer', (col) => col.notNull())
     .addColumn('updated_at', 'timestamp', (col) => col.defaultTo(sql`CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`).notNull())
     .addColumn('deleted_at', 'timestamp')
@@ -100,14 +99,13 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn('created_at', 'timestamp', (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`).notNull())
     .execute()
 
-  await db.schema.createIndex('idx_positions_code').on('positions').column('code').execute()
+  await db.schema.createIndex('idx_roles_code').on('roles').column('code').execute()
   await db.schema.createIndex('idx_departments_name').on('departments').column('name').execute()
   await db.schema.createIndex('idx_branches_name').on('branches').column('name').execute()
 
   await db.schema.createIndex('idx_users_department_id').on('users').column('department_id').execute()
-  await db.schema.createIndex('idx_users_position_id').on('users').column('position_id').execute()
+  await db.schema.createIndex('idx_users_role_id').on('users').column('role_id').execute()
   await db.schema.createIndex('idx_users_branch_id').on('users').column('branch_id').execute()
-  await db.schema.createIndex('idx_users_role').on('users').column('role').execute()
 
   await db.schema.createIndex('idx_tasks_title').on('tasks').column('title').execute()
   await db.schema.createIndex('idx_tasks_weight').on('tasks').column('weight').execute()
@@ -136,5 +134,5 @@ export async function down(db: Kysely<any>): Promise<void> {
   await db.schema.dropTable('users').ifExists().execute()
   await db.schema.dropTable('branches').ifExists().execute()
   await db.schema.dropTable('departments').ifExists().execute()
-  await db.schema.dropTable('positions').ifExists().execute()
+  await db.schema.dropTable('roles').ifExists().execute()
 }

@@ -181,28 +181,24 @@ export class TaskRepository implements ITaskRepository {
             query = query.where("task_sessions.branch_id", "=", filter.branchId);
         }
 
-        if (filter.positionId) {
-            query = query.where("users.position_id", "=", filter.positionId);
-        }
-
         if (filter.status) {
             query = query.where("task_sessions.status", "=", filter.status as 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'APPROVED' | 'REJECTED');
         }
 
         const sessions = await query
             .select([
-                "task_sessions.id as session_id",
-                "task_sessions.session_date",
-                "task_sessions.status",
-                "tasks.id as task_id",
-                "tasks.title as task_title",
-                "tasks.description as task_description",
-                "task_sessions.score as session_score",
-                "task_sessions.manager_comment",
-                "task_session_attachments.id as attachment_id",
-                "task_session_attachments.file_url as attachment_url",
-                "users.id as user_id",
-                "users.full_name as user_name"
+                "task_sessions.id as id",
+                "task_sessions.session_date as date",
+                "task_sessions.status as status",
+                "tasks.id as taskId",
+                "tasks.title as taskTitle",
+                "tasks.description as taskDescription",
+                "task_sessions.score as sessionScore",
+                "task_sessions.manager_comment as managerComment",
+                "task_session_attachments.id as attachmentId",
+                "task_session_attachments.file_url as attachmentUrl",
+                "users.id as userId",
+                "users.full_name as userName"
             ])
             .execute();
 

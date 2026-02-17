@@ -43,7 +43,7 @@ export function setupTaskSessionRoute() {
     /**
      * Routes
      */
-    router.get("/check", authMiddleware,(req, res) => taskController.checkTaskSessionExists(req, res));
+    router.get("/exists", authMiddleware,(req, res) => taskController.checkTaskSessionExists(req, res));
     router.get("/", authMiddleware,(req, res) => taskController.getTaskSessions(req, res));
     router.post("/", authMiddleware,(req, res) => taskController.createTaskSession(req, res));
     router.put("/", authMiddleware,(req, res) => taskController.updateTaskSession(req, res));

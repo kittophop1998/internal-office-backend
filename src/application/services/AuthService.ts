@@ -30,8 +30,7 @@ export class AuthService {
                 full_name: `${erpUser.name} ${erpUser.surname}`,
                 email: `${erpUser.username}@changsiamthailand.com`,
                 department_id: 1,
-                position_id: 1,
-                role: 'STAFF',
+                role_id: 1,
             };
             await this.userRepository.create(newUser);
             // ##############################################
@@ -41,7 +40,7 @@ export class AuthService {
                 throw new Error('User creation failed');
             }
         } else {
-            const isPasswordValid = await PasswordService.comparePassword(password, user.password_hash);
+            const isPasswordValid = await PasswordService.comparePassword(password, user.passwordHash);
             if (!isPasswordValid) {
                 throw new Error('Invalid username or password');
             }
@@ -50,23 +49,26 @@ export class AuthService {
         const token = JWTService.generateToken({
             id: user.id,
             username: user.username,
-            full_name: user.full_name,
+            full_name: user.fullname,
             email: user.email,
-            department_id: user.department_id,
+            department_id: user.departmentId,
         });
+
+        console.log('Generated JWT token:', user);
 
         return {
             user: {
-                id: user.id.toString(),
+                id: user.id,
                 username: user.username,
-                fullname: user.full_name,
-                role: user.role,
-                position: user.position_id.toString(),
-                positionName: user.position_title,
-                branch: user.branch_id ? user.branch_id.toString() : null,
-                branchName: user.branch_name || null,
-                branchLocation: user.branch_location || null,
-                department: user.department_id.toString(),
+                fullName: user.fullName,
+                roleId: user.roleId,
+                roleCode: user.roleCode,
+                roleName: user.roleName,
+                positionName: user.positionTitle,
+                branch: user.branchId ? user.branchId.toString() : null,
+                branchName: user.branchName || null,
+                branchLocation: user.branchLocation || null,
+                department: user.departmentId.toString(),
             },
             accessToken: token,
         };

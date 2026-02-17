@@ -167,38 +167,50 @@ async function seed() {
         }
 
         // Seed Positions
-        console.log('Seeding positions...');
-        const positionCountResult = await db
-            .selectFrom('positions')
+        console.log('Seeding roles...');
+        const roleCountResult = await db
+            .selectFrom('roles')
             .select(db.fn.count<number>('id').as('count'))
             .executeTakeFirst();
-        const positionCount = positionCountResult ? Number(positionCountResult.count) : 0;
+        const roleCount = roleCountResult ? Number(roleCountResult.count) : 0;
 
-        if (positionCount === 0) {
+        if (roleCount === 0) {
             await db
-                .insertInto('positions')
+                .insertInto('roles')
                 .values([
                     {
                         "code": "ADMIN",
-                        "title": "Administrator",
+                        "name": "Administrator",
                         "description": "System Administrator",
                         "updated_at": new Date()
                     },
                     {
                         "code": "MANAGER",
-                        "title": "Manager",
+                        "name": "Manager",
                         "description": "Department Manager",
                         "updated_at": new Date()
                     },
                     {
                         "code": "STAFF",
-                        "title": "Staff",
+                        "name": "Staff",
                         "description": "General Staff Member",
                         "updated_at": new Date()
-                    }
+                    },
+                    {
+                        "code": "CASHIER",
+                        "name": "Cashier",
+                        "description": "Handles cash transactions",
+                        "updated_at": new Date()
+                    },
+                    {
+                        "code": "SALE",
+                        "name": "Sales",
+                        "description": "Handles sales transactions",
+                        "updated_at": new Date()
+                    },
                 ])
                 .execute();
-            console.log('Positions seeded successfully.');
+            console.log('Roles seeded successfully.');
         }
 
         // Seed Departments

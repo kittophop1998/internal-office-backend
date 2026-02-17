@@ -11,7 +11,6 @@ export class TaskController {
     async create(req: AuthenticatedRequest, res: Response) {
         try {
             const userId = Number(req.user?.id);
-            console.log(`Creating task for user ID: ${userId}`); // Debugging line
             const taskData = req.body;
             await this.taskService.create(userId, taskData);
 

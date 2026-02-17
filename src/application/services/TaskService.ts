@@ -126,31 +126,31 @@ export class TaskService {
         const sessions = await this.taskRepository.getTaskSessions(filter);
 
         const groupedSessions = sessions.reduce((acc: any, curr: any) => {
-            const existingSession = acc.find((s: any) => s.session_id === curr.session_id);
+            const existingSession = acc.find((s: any) => s.id === curr.id);
 
             if (existingSession) {
-                if (curr.attachment_id && !existingSession.attachments.some((a: any) => a.attachment_id === curr.attachment_id)) {
+                if (curr.attachmentId && !existingSession.attachments.some((a: any) => a.attachmentId === curr.attachmentId)) {
                     existingSession.attachments.push({
-                        attachment_id: curr.attachment_id,
-                        attachment_url: curr.attachment_url
+                        attachmentId: curr.attachmentId,
+                        attachmentUrl: curr.attachmentUrl
                     });
                 }
             } else {
-                const attachments = curr.attachment_id
-                    ? [{ attachment_id: curr.attachment_id, attachment_url: curr.attachment_url }]
+                const attachments = curr.attachmentId
+                    ? [{ attachmentId: curr.attachmentId, attachmentUrl: curr.attachmentUrl }]
                     : [];
 
                 acc.push({
-                    session_id: curr.session_id,
-                    session_date: curr.session_date,
+                    id: curr.id,
+                    date: curr.date,
                     status: curr.status,
-                    task_id: curr.task_id,
-                    task_title: curr.task_title,
-                    task_description: curr.task_description,
-                    session_score: curr.session_score,
-                    manager_comment: curr.manager_comment,
-                    user_id: curr.user_id,
-                    user_name: curr.user_name,
+                    taskId: curr.taskId,
+                    taskTitle: curr.taskTitle,
+                    taskDescription: curr.taskDescription,
+                    sessionScore: curr.sessionScore,
+                    managerComment: curr.managerComment,
+                    userId: curr.userId,
+                    userName: curr.userName,
                     attachments: attachments
                 });
             }
@@ -164,18 +164,18 @@ export class TaskService {
                 if (session.attachments && session.attachments.length > 0) {
                     const attachmentsWithUrls = await Promise.all(
                         session.attachments.map(async (attachment: any) => {
-                            if (attachment.attachment_url) {
+                            if (attachment.attachmentUrl) {
                                 try {
                                     const signedUrl = await s3.getSignedDownloadUrl({
-                                        key: attachment.attachment_url,
+                                        key: attachment.attachmentUrl,
                                         expiresIn: 3600,
                                     });
                                     return {
-                                        ...attachment,
-                                        attachment_url: signedUrl.url,
+                                        attachmentId: attachment.attachmentId,
+                                        attachmentUrl: signedUrl.url,
                                     };
                                 } catch (error) {
-                                    console.error(`Error generating signed URL for ${attachment.attachment_url}:`, error);
+                                    console.error(`Error generating signed URL for ${attachment.attachmentUrl}:`, error);
                                     return attachment;
                                 }
                             }
