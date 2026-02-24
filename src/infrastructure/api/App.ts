@@ -21,7 +21,8 @@ export class App {
         const allowedOrigins = [
             'http://localhost:3000',
             'http://localhost:5173',
-            'http://localhost:3001'
+            'http://localhost:3001',
+            'http://internal-office:3000',
         ];
 
         this.app.use(cors({
