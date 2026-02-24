@@ -246,6 +246,30 @@ async function seed() {
         }
 
         console.log('Database seeding completed.');
+
+        // Seed Groups
+        console.log('Seeding groups...');
+        const groupCountResult = await db
+            .selectFrom('task_groups')
+            .select(db.fn.count<number>('id').as('count'))
+            .executeTakeFirst();
+        const groupCount = groupCountResult ? Number(groupCountResult.count) : 0;
+
+        if (groupCount === 0) {
+            await db
+                .insertInto('task_groups')
+                .values([
+                    {
+                        "name": "ขั้นตอนในการบริการแคชเชียร์ เช่น รับเงินทอนเงิน  ปิดปากถุงไหม",
+                        "percent_weight": 20,
+                        "updated_at": new Date()
+                    },
+                ])
+                .execute();
+            console.log('Groups seeded successfully.');
+        }
+
+        console.log('Database seeding completed.');
     } catch (error) {
         console.error('Error during seeding:', error);
         throw error;

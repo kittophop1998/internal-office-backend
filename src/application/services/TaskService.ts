@@ -14,6 +14,7 @@ export class TaskService {
             subtype: input.subtype,
             description: input.description,
             weight: input.weight,
+            group_id: input.groupId,
             position_id: input.positionId ?? 3,
             sort_order: input.sortOrder,
             created_at: dayjs().toDate(),
@@ -22,6 +23,8 @@ export class TaskService {
         };
 
         const taskId = await this.taskRepository.create(inputToSave);
+
+        // Assign task to users
         const taskAssigns = input.users.map((item: any) => ({
             task_id: taskId,
             user_id: item,
@@ -50,8 +53,8 @@ export class TaskService {
         await this.taskRepository.update(taskId, taskToUpdate);
     }
 
-    async getTasks(): Promise<any[]> {
-        return await this.taskRepository.getTasks();
+    async getTasks(filter: any): Promise<any[]> {
+        return await this.taskRepository.getTasks(filter);
     }
 
     async getTaskById(taskId: number): Promise<any> {

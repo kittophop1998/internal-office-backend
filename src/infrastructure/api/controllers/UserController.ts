@@ -1,11 +1,23 @@
 import { Request, Response } from 'express';
 import { ResponseUtil } from '../utils/Response';
 import { UserService } from '../../../application/services/UserService';
+import { AuthenticatedRequest } from '../middlewares/authMiddleware';
 
 export class UserController {
     constructor(
         private userService: UserService
     ) { }
+
+    async createUser(req: Request, res: Response) {
+        try {
+            const userData = req.body;
+            await this.userService.createUser(userData);
+
+            ResponseUtil.success(res, null, 'User created successfully');
+        } catch (error: any) {
+            ResponseUtil.error(res, 'Failed to create user', 500, error.message);
+        }
+    }
 
     async getUserProfile(_: Request, res: Response) {
         try {
@@ -18,9 +30,9 @@ export class UserController {
         }
     }
 
-    async updateUserProfile(req: Request, res: Response) {
+    async updateUserProfile(req: AuthenticatedRequest, res: Response) {
         try {
-            const userId = 1;
+            const userId = Number(req.user?.id);
             const profileData = req.body;
             await this.userService.updateUserProfile(userId, profileData);
 

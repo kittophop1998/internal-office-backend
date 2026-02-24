@@ -1,13 +1,63 @@
 import { IUserRepository } from "../repositories/userRepo";
+import { PasswordService } from "../../infrastructure/api/utils/PasswordService";
 
 export class UserService {
     constructor(
         private userRepository: IUserRepository
     ) {}
 
+    async createUser(userData: any) {
+        const passwordHash = await PasswordService.hashPassword(userData.password);
+
+        const userToSave = {
+            full_name: userData.fullName,
+            username: userData.username,
+            password_hash: passwordHash,
+            email: userData.email,
+            department_id: userData.departmentId,
+            role_id: userData.roleId
+        };
+
+        const createdUserId = await this.userRepository.create(userToSave);
+        const createdUser = await this.userRepository.findById(Number(createdUserId));
+        const userBranches = userData.branchIds.map((branchId: number) => ({
+            user_id: createdUser.id,
+            branch_id: branchId,
+        }));
+
+        await this.userRepository.userbranchCreate(createdUser.id, userBranches);
+    }
+
     async getUsers(filters: any) {
         const users = await this.userRepository.findAll(filters);
-        return users;
+
+        const grouped = users.reduce((acc: any[], user: any) => {
+            const existing = acc.find((u) => u.id === user.id);
+            const branch = user.branchId
+                ? { branchId: user.branchId, branchName: user.branchName }
+                : null;
+
+            if (existing) {
+                if (branch) existing.branches.push(branch);
+            } else {
+                acc.push({
+                    id: user.id,
+                    username: user.username,
+                    fullName: user.fullName,
+                    email: user.email,
+                    roleId: user.roleId,
+                    roleCode: user.roleCode,
+                    roleName: user.roleName,
+                    departmentId: user.departmentId,
+                    departmentName: user.departmentName,
+                    branches: branch ? [branch] : [],
+                });
+            }
+
+            return acc;
+        }, []);
+
+        return grouped;
     }
 
     async getUserProfile(userId: number) {
@@ -33,16 +83,17 @@ export class UserService {
             full_name: profileData.fullName,
             email: profileData.email,
             department_id: profileData.departmentId,
-            position_id: profileData.positionId,
+            role_id: profileData.roleId
         };
 
-        const user = await this.userRepository.findById(userId);
-        if (!user) {
-            throw new Error('User not found');
-        }
+        await this.userRepository.update(userId, userToSave);
 
-        Object.assign(user, userToSave);
+        const updateUserBranches = profileData.branchIds.map((branchId: number) => ({
+            user_id: userId,
+            branch_id: branchId,
+        }));
 
-        await this.userRepository.update(user);
+        await this.userRepository.userbranchCreate(userId, updateUserBranches);
+        console.log('4')
     }
 }

@@ -32,9 +32,14 @@ export class TaskController {
         }
     }
 
-    async getTasks(_: Request, res: Response) {
+    async getTasks(req: Request, res: Response) {
         try {
-            const tasks = await this.taskService.getTasks();
+            const filter = {
+                type: req.query.type as string,
+                groupId: req.query.groupId ? Number(req.query.groupId) : undefined
+            };
+
+            const tasks = await this.taskService.getTasks(filter);
 
             ResponseUtil.success(res, tasks, 'Tasks retrieved successfully');
         } catch (error: any) {

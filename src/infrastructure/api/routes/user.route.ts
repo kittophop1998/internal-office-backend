@@ -2,6 +2,7 @@ import { Router } from "express";
 import { UserRepository } from "../../database/UserRepository";
 import { UserService } from "../../../application/services/UserService";
 import { UserController } from "../controllers/UserController";
+import { authMiddleware } from "../middlewares/authMiddleware";
 
 export function setupUserRoute() {
     const router = Router();
@@ -24,9 +25,10 @@ export function setupUserRoute() {
     /**
      * Routes
      */
-    router.get("/", (req, res) => userController.getUsers(req, res));
-    router.get("/:id", (req, res) => userController.getUserById(req, res));
-    router.put("/:id", (req, res) => userController.updateUserById(req, res));
+    router.post("/", authMiddleware, (req, res) => userController.createUser(req, res));
+    router.get("/", authMiddleware, (req, res) => userController.getUsers(req, res));
+    router.get("/:id", authMiddleware, (req, res) => userController.getUserById(req, res));
+    router.put("/:id", authMiddleware, (req, res) => userController.updateUserById(req, res));
 
     return router;
 }

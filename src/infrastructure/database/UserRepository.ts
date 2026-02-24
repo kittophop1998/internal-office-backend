@@ -3,10 +3,14 @@ import { db } from "./maria";
 
 export class UserRepository implements IUserRepository {
     async create(user: any): Promise<any> {
-            await db
-                .insertInto('users')
-                .values(user)
-                .execute();
+        const createdUser = await db
+            .insertInto("users")
+            .values(user)
+            .executeTakeFirst();
+
+        const insertedId = createdUser?.insertId?.toString();
+
+        return insertedId;
     }
 
     async findAll(filters: any): Promise<any[]> {
@@ -14,25 +18,29 @@ export class UserRepository implements IUserRepository {
             .selectFrom('users')
             .innerJoin('roles', 'users.role_id', 'roles.id')
             .innerJoin('departments', 'users.department_id', 'departments.id')
-            .leftJoin('branches', 'users.branch_id', 'branches.id')
-            .select([
-                'users.id as id',
-                'users.username as username',
-                'users.full_name as fullname',
-                'users.email as email',
-                'users.department_id as departmentId',
-                'users.role_id as roleId',
-                'roles.name as roleName',
-                'departments.name as departmentName',
-                'branches.name as branchName',
-                'branches.location as branchLocation'
-            ]);
+            .leftJoin('user_branches', 'users.id', 'user_branches.user_id')
+            .leftJoin('branches', 'user_branches.branch_id', 'branches.id');
 
-        if (filters.departmentId) {
-            query = query.where('users.department_id', '=', Number(filters.departmentId));
+        if (filters.roleId) {
+            query = query.where('users.role_id', '=', Number(filters.roleId));
         }
 
-        const users = await query.execute();
+        const users = await query
+        .select([
+            'users.id as id',
+            'users.username as username',
+            'users.full_name as fullName',
+            'users.email as email',
+            'users.role_id as roleId',
+            'roles.code as roleCode',
+            'roles.name as roleName',
+            'users.department_id as departmentId',
+            'departments.name as departmentName',
+            'user_branches.branch_id as branchId',
+            'branches.name as branchName',
+        ])
+        .execute();
+
         return users;
     }
 
@@ -83,17 +91,38 @@ export class UserRepository implements IUserRepository {
                 'branches.name as branchName',
                 'branches.location as branchLocation',
             ])
-            .where('id', '=', id)
+            .where('users.id', '=', id)
             .executeTakeFirst();
 
         return user || null;
     }
 
-    async update(user: any): Promise<any> {
+    async update(id: number, input: any): Promise<any> {
         await db
             .updateTable('users')
-            .set(user)
-            .where('id', '=', user.id)
+            .set(input)
+            .where('id', '=', id)
             .execute();
+    }
+
+    async userbranchCreate(userId: number, userBranch: any): Promise<any> {
+        await db
+            .deleteFrom('user_branches')
+            .where('user_id', '=', userId)
+            .execute();
+
+        await db.transaction().execute(async (trx) => {
+            for (const item of userBranch) {
+                await trx
+                    .insertInto('user_branches')
+                    .values({
+                        ...item,
+                        created_at: new Date(),
+                        updated_at: new Date(),
+                        deleted_at: null,
+                    })
+                    .execute();
+            }
+        });
     }
 }

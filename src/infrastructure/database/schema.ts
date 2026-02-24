@@ -5,6 +5,7 @@ import {
 
 export interface Database {
   users: UserTable
+  user_branches: UserBranchTable
   roles: RoleTable
   departments: DepartmentTable
   branches: BranchTable
@@ -12,6 +13,7 @@ export interface Database {
   task_assignments: TaskAssignmentTable
   task_sessions: TaskSessionTable
   task_session_attachments: TaskSessionAttachmentTable
+  task_groups: TaskGroupTable
 }
 
 export interface UserTable {
@@ -28,6 +30,15 @@ export interface UserTable {
   deleted_at: Date | null
 }
 
+export interface UserBranchTable {
+  id: Generated<number>
+  user_id: number
+  branch_id: number
+  created_at: Generated<Date>
+  updated_at: Date
+  deleted_at: Date | null
+}
+
 export interface TaskTable {
   id: Generated<number>
   title: string
@@ -36,6 +47,7 @@ export interface TaskTable {
   subtype: 'pre-opening' | 'pre-closing'
   position_id: number | null
   created_at: Generated<Date>
+  group_id: number
   weight: number
   sort_order: number
   updated_at: Date
@@ -107,7 +119,17 @@ export interface BranchTable {
   deleted_at: Date | null
 }
 
+export interface TaskGroupTable {
+  id: Generated<number>
+  name: string
+  percent_weight: number
+  created_at: Generated<Date>
+  updated_at: Date
+  deleted_at: Date | null
+}
+
 export type User = Selectable<UserTable>
+export type UserBranch = Selectable<UserBranchTable>
 export type Role = Selectable<RoleTable>
 export type Task = Selectable<TaskTable>
 export type TaskSession = Selectable<TaskSessionTable>
@@ -115,3 +137,4 @@ export type Department = Selectable<DepartmentTable>
 export type Branch = Selectable<BranchTable>
 export type TaskAssignment = Selectable<TaskAssignmentTable>
 export type TaskSessionAttachment = Selectable<TaskSessionAttachmentTable>
+export type TaskGroup = Selectable<TaskGroupTable>

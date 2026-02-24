@@ -24,18 +24,32 @@ export class TaskRepository implements ITaskRepository {
             .execute();
     }
 
-    async getTasks(filter?: any): Promise<any[]> {
+    async getTasks(filter: any): Promise<any[]> {
         let query = await db
             .selectFrom("tasks")
-            .where("deleted_at", "is", null);
+            .innerJoin("task_groups", "tasks.group_id", "task_groups.id")
+            .where("tasks.deleted_at", "is", null);
 
-        if (filter?.type) {
-            query = query.where("type", "=", filter.type);
+        if (filter.type) {
+            query = query.where("tasks.type", "=", filter.type);
         }
 
-        query = query.orderBy("sort_order", "asc");
+        if (filter.groupId) {
+            query = query.where("tasks.group_id", "=", filter.groupId);
+        }
+
+        query = query.orderBy("tasks.sort_order", "asc");
         const tasks = await query
-            .selectAll()
+            .select([
+                "tasks.id",
+                "tasks.title",
+                "tasks.description",
+                "tasks.type",
+                "tasks.subtype",
+                "tasks.weight",
+                "tasks.sort_order as sortOrder",
+                "task_groups.name as groupName"
+            ])
             .execute();
 
         return tasks;
@@ -46,6 +60,7 @@ export class TaskRepository implements ITaskRepository {
             .selectFrom("tasks")
             .innerJoin("task_assignments", "tasks.id", "task_assignments.task_id")
             .innerJoin("users", "task_assignments.user_id", "users.id")
+            .innerJoin("task_groups", "tasks.group_id", "task_groups.id")
             .select([
                 "tasks.id",
                 "tasks.title",
@@ -53,6 +68,8 @@ export class TaskRepository implements ITaskRepository {
                 "tasks.type",
                 "tasks.subtype",
                 "tasks.weight",
+                "task_groups.id as group_id",
+                "task_groups.name as group_name",
                 "tasks.sort_order",
                 "task_assignments.id as assignment_id",
                 "task_assignments.user_id as assigned_user_id",
@@ -71,14 +88,16 @@ export class TaskRepository implements ITaskRepository {
                     type: curr.type,
                     subtype: curr.subtype,
                     weight: curr.weight,
-                    sort_order: curr.sort_order,
+                    groupId: curr.group_id,
+                    groupName: curr.group_name,
+                    sortOrder: curr.sort_order,
                     assignments: []
                 };
             }
             acc.assignments.push({
-                assignment_id: curr.assignment_id,
-                user_id: curr.assigned_user_id,
-                user_name: curr.assigned_user_name
+                assignmentId: curr.assignment_id,
+                userId: curr.assigned_user_id,
+                userName: curr.assigned_user_name
             });
             return acc;
         }, null);
