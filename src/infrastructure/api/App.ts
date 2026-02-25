@@ -19,7 +19,7 @@ export class App {
         this.app.use(cookieParser());
 
         const allowedOrigins = [
-            'https://office.ruangthongpharmacy.com/',
+            'https://office.ruangthongpharmacy.com',
         ];
 
         this.app.use(cors({
