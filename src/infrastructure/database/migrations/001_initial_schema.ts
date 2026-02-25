@@ -76,7 +76,7 @@ export async function up(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable('task_sessions')
     .addColumn('id', 'integer', (col) => col.autoIncrement().primaryKey())
-    .addColumn('session_date', 'date', (col) => col.notNull())
+    .addColumn('session_date', 'varchar(20)', (col) => col.notNull())
     .addColumn('type', 'varchar(20)', (col) => col.notNull())
     .addColumn('task_id', 'integer', (col) => col.notNull())
     .addColumn('user_id', 'integer', (col) => col.notNull())

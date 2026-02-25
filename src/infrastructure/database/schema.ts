@@ -1,4 +1,5 @@
 import {
+  ColumnType,
   Generated,
   Selectable,
 } from 'kysely'
@@ -67,7 +68,7 @@ export interface TaskAssignmentTable {
 
 export interface TaskSessionTable {
   id: Generated<number>
-  session_date: Date
+  session_date: string
   type: 'DAILY' | 'WEEKLY' | 'MONTHLY'
   task_id: number
   user_id: number

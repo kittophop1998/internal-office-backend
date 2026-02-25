@@ -84,7 +84,7 @@ export class TaskService {
     }
 
     async createTaskSession(userId: number, type: string, branchId: number): Promise<void> {
-        const sessionDate = dayjs().startOf('day').toDate();
+        const sessionDate = dayjs().startOf('day').format('YYYY-MM-DD');
         const isExists = await this.taskRepository.isTaskSessionExists(userId, sessionDate);
         if (isExists) {
             throw new Error("Task session already exists for this user, date, and type.");
@@ -116,12 +116,12 @@ export class TaskService {
     }
 
     async checkTaskSessionExists(filter: any): Promise<boolean> {
-        const date = dayjs().startOf('day').toDate();
+        const date = dayjs().format('YYYY-MM-DD');
         return await this.taskRepository.isTaskSessionExists(filter, date);
     }
 
     async isTaskSessionExists(userId: number): Promise<boolean> {
-        const date = dayjs().startOf('day').toDate();
+        const date = dayjs().format('YYYY-MM-DD');
         return await this.taskRepository.isTaskSessionExists(userId, date);
     }
 

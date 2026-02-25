@@ -158,8 +158,7 @@ export class TaskRepository implements ITaskRepository {
             .execute();
     }
 
-    async isTaskSessionExists(filter: any, date: Date): Promise<boolean> {
-        console.log('Checking task session existence with filter:', filter, 'and date:', date);
+    async isTaskSessionExists(filter:any , date: string): Promise<boolean> {
         const session = await db
             .selectFrom("task_sessions")
             .selectAll()
@@ -174,7 +173,7 @@ export class TaskRepository implements ITaskRepository {
     }
 
     async getTaskSessions(filter: any): Promise<any[]> {
-        const today = dayjs().startOf('day').toDate();
+        const today = dayjs().startOf('day').format('YYYY-MM-DD');
 
         let query = await db
             .selectFrom("task_sessions")
