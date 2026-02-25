@@ -17,4 +17,20 @@ export class MasterRepository implements IMasterRepository {
             taskGroups
         };
     }
+
+    async getBranchMasterData(filter: any): Promise<any> {
+        const branches = await db
+            .selectFrom('user_branches')
+            .innerJoin('branches', 'user_branches.branch_id', 'branches.id')
+            .select([
+                'branches.id',
+                'branches.name'
+            ])
+            .where('user_branches.user_id', '=', filter.userId)
+            .execute();
+
+        return {
+            branches
+        };
+    }
 }

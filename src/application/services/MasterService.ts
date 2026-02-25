@@ -8,4 +8,8 @@ export class MasterService {
     async getMasterData(): Promise<any> {
         return this.masterRepository.getMasterData();
     }
+
+    async getBranchMasterData(filter: any): Promise<any> {
+        return this.masterRepository.getBranchMasterData(filter);
+    }
 }
