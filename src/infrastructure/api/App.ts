@@ -19,10 +19,7 @@ export class App {
         this.app.use(cookieParser());
 
         const allowedOrigins = [
-            'http://localhost:3000',
-            'http://localhost:5173',
-            'http://localhost:3001',
-            'http://internal-office:3000',
+            'https://office.ruangthongpharmacy.com/',
         ];
 
         this.app.use(cors({
