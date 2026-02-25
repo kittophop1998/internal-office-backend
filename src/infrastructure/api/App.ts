@@ -20,6 +20,7 @@ export class App {
 
         const allowedOrigins = [
             'https://office.ruangthongpharmacy.com',
+            'http://localhost:3000',
         ];
 
         this.app.use(cors({

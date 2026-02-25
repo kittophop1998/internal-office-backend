@@ -54,8 +54,6 @@ export class AuthService {
             department_id: user.departmentId,
         });
 
-        console.log('Generated JWT token:', user);
-
         return {
             user: {
                 id: user.id,
