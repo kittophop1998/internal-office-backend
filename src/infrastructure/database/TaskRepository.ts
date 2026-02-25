@@ -159,6 +159,7 @@ export class TaskRepository implements ITaskRepository {
     }
 
     async isTaskSessionExists(filter: any, date: Date): Promise<boolean> {
+        console.log('Checking task session existence with filter:', filter, 'and date:', date);
         const session = await db
             .selectFrom("task_sessions")
             .selectAll()
