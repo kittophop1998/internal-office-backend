@@ -53,7 +53,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn('title', 'varchar(255)', (col) => col.notNull())
     .addColumn('description', 'text', (col) => col.notNull())
     .addColumn('type', 'varchar(20)', (col) => col.notNull())
-    .addColumn('subtype', 'varchar(50)', (col) => col.notNull())
+    .addColumn('subtype', 'varchar(50)')
     .addColumn('created_at', 'timestamp', (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`).notNull())
     .addColumn('weight', sql.raw('decimal(5,2)'), (col) => col.notNull())
     .addColumn('sort_order', 'integer', (col) => col.notNull())

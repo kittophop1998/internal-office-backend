@@ -11,7 +11,7 @@ export class TaskService {
         const inputToSave = {
             title: input.title,
             type: input.type,
-            subtype: input.subtype,
+            subtype: input.subtype ?? null,
             description: input.description,
             weight: input.weight,
             group_id: input.groupId,
@@ -21,11 +21,9 @@ export class TaskService {
             updated_at: dayjs().toDate(),
             deleted_at: null
         };
-
         const taskId = await this.taskRepository.create(inputToSave);
 
-        // Assign task to users
-        const taskAssigns = input.users.map((item: any) => ({
+        const dataToSave = input.users.map((item: any) => ({
             task_id: taskId,
             user_id: item,
             assigned_at: dayjs().toDate(),
@@ -35,10 +33,10 @@ export class TaskService {
             deleted_at: null
         }));
 
-        await this.taskRepository.assignTask(taskAssigns);
+        await this.taskRepository.assignTask(taskId, dataToSave);
     }
 
-    async update(taskId: number, input: any): Promise<void> {
+    async update(userId: number, input: any): Promise<void> {
         const taskToUpdate = {
             title: input.title,
             type: input.type,
@@ -50,7 +48,21 @@ export class TaskService {
             updated_at: dayjs().toDate()
         };
 
-        await this.taskRepository.update(taskId, taskToUpdate);
+        if (input.users && input.users.length > 0) {
+            const dataToSave = input.users.map((item: any) => ({
+                task_id: input.taskId,
+                user_id: item,
+                assigned_at: dayjs().toDate(),
+                assigned_by: userId,
+                created_at: dayjs().toDate(),
+                updated_at: dayjs().toDate(),
+                deleted_at: null
+            }));
+
+            await this.taskRepository.assignTask(input.taskId, dataToSave);
+        }
+
+        await this.taskRepository.update(input.taskId, taskToUpdate);
     }
 
     async getTasks(filter: any): Promise<any[]> {
@@ -69,23 +81,14 @@ export class TaskService {
         return await this.taskRepository.getTaskAssignments(userId);
     }
 
-    async assignTask(input: any): Promise<void> {
-        const inputAssign = {
-            task_id: input.task_id,
-            user_id: input.user_id,
-            assigned_at: dayjs().toDate(),
-            assigned_by: input.assigned_by,
-            created_at: dayjs().toDate(),
-            updated_at: dayjs().toDate(),
-            deleted_at: null
-        };
-
-        await this.taskRepository.assignTask(inputAssign);
-    }
-
     async createTaskSession(userId: number, type: string, branchId: number): Promise<void> {
         const sessionDate = dayjs().startOf('day').format('YYYY-MM-DD');
-        const isExists = await this.taskRepository.isTaskSessionExists(userId, sessionDate);
+        const isExists = await this.taskRepository.isTaskSessionExists({
+            userId,
+            type: type as 'DAILY' | 'WEEKLY' | 'MONTHLY',
+            branchId,
+            date: sessionDate
+        });
         if (isExists) {
             throw new Error("Task session already exists for this user, date, and type.");
         }
@@ -115,15 +118,15 @@ export class TaskService {
         await this.taskRepository.createTaskSession(taskSession);
     }
 
-    async checkTaskSessionExists(filter: any): Promise<boolean> {
-        const date = dayjs().format('YYYY-MM-DD');
-        return await this.taskRepository.isTaskSessionExists(filter, date);
-    }
+    // async checkTaskSessionExists(filter: any): Promise<boolean> {
+    //     const date = dayjs().format('YYYY-MM-DD');
+    //     return await this.taskRepository.isTaskSessionExists(filter, date);
+    // }
 
-    async isTaskSessionExists(userId: number): Promise<boolean> {
-        const date = dayjs().format('YYYY-MM-DD');
-        return await this.taskRepository.isTaskSessionExists(userId, date);
-    }
+    // async isTaskSessionExists(userId: number): Promise<boolean> {
+    //     const date = dayjs().format('YYYY-MM-DD');
+    //     return await this.taskRepository.isTaskSessionExists(userId, date);
+    // }
 
     async getTaskSessions(filter: any): Promise<any[]> {
         const sessions = await this.taskRepository.getTaskSessions(filter);
@@ -145,6 +148,7 @@ export class TaskService {
 
                 acc.push({
                     id: curr.id,
+                    type: curr.sessionType,
                     date: curr.date,
                     status: curr.status,
                     taskId: curr.taskId,

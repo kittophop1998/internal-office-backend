@@ -26,13 +26,9 @@ export function setupTaskRoute() {
      * Routes
      */
     router.post("/", authMiddleware, (req, res) => taskController.create(req, res));
-    router.get("/", (req, res) => taskController.getTasks(req, res));
-
-    router.post("/assign", (req, res) => taskController.assignTask(req, res));
-    router.get("/assignments/:userId", (req, res) => taskController.getTaskAssignments(req, res));
-
-    router.delete("/:id", (req, res) => taskController.deleteTask(req, res));
-    router.get("/:id", (req, res) => taskController.getTaskById(req, res));
-    router.put("/:id", (req, res) => taskController.update(req, res));
+    router.get("/", authMiddleware, (req, res) => taskController.getTasks(req, res));
+    router.delete("/:id", authMiddleware, (req, res) => taskController.deleteTask(req, res));
+    router.get("/:id", authMiddleware, (req, res) => taskController.getTaskById(req, res));
+    router.put("/:id", authMiddleware, (req, res) => taskController.update(req, res));
     return router;
 }

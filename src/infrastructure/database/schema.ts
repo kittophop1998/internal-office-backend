@@ -45,7 +45,7 @@ export interface TaskTable {
   title: string
   description: string
   type: 'DAILY' | 'WEEKLY' | 'MONTHLY'
-  subtype: 'pre-opening' | 'pre-closing'
+  subtype: 'pre-opening' | 'pre-closing' | null
   position_id: number | null
   created_at: Generated<Date>
   group_id: number

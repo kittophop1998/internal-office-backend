@@ -58,9 +58,9 @@ export class TaskRepository implements ITaskRepository {
     async getTaskById(taskId: number): Promise<any> {
         const task = await db
             .selectFrom("tasks")
-            .innerJoin("task_assignments", "tasks.id", "task_assignments.task_id")
-            .innerJoin("users", "task_assignments.user_id", "users.id")
             .innerJoin("task_groups", "tasks.group_id", "task_groups.id")
+            .leftJoin("task_assignments", "tasks.id", "task_assignments.task_id")
+            .leftJoin("users", "task_assignments.user_id", "users.id")
             .select([
                 "tasks.id",
                 "tasks.title",
@@ -140,7 +140,20 @@ export class TaskRepository implements ITaskRepository {
         return assignments;
     }
 
-    async assignTask(input: any): Promise<void> {
+    async assignTask(taskId: number, input: any): Promise<void> {
+        const assign = await db
+            .selectFrom("task_assignments")
+            .selectAll()
+            .where("task_id", "=", taskId)
+            .execute();
+
+        if (assign.length > 0) {
+            await db
+                .deleteFrom("task_assignments")
+                .where("task_id", "=", taskId)
+                .execute();
+        }
+
         await db.transaction().execute(async (trx) => {
             for (const item of input) {
                 await trx
@@ -158,14 +171,14 @@ export class TaskRepository implements ITaskRepository {
             .execute();
     }
 
-    async isTaskSessionExists(filter:any , date: string): Promise<boolean> {
+    async isTaskSessionExists(input:any): Promise<boolean> {
         const session = await db
             .selectFrom("task_sessions")
             .selectAll()
-            .where("user_id", "=", filter.userId)
-            .where("type", "=", filter.type as 'DAILY' | 'WEEKLY' | 'MONTHLY')
-            .where("branch_id", "=", filter.branchId)
-            .where("session_date", "=", date)
+            .where("user_id", "=", input.userId)
+            .where("type", "=", input.type as 'DAILY' | 'WEEKLY' | 'MONTHLY')
+            .where("branch_id", "=", input.branchId)
+            .where("session_date", "=", input.date)
             .where("deleted_at", "is", null)
             .executeTakeFirst();
 
@@ -188,14 +201,6 @@ export class TaskRepository implements ITaskRepository {
             query = query.where("task_sessions.user_id", "=", filter.userId);
         }
 
-        if (filter.type) {
-            query = query.where("task_sessions.type", "=", filter.type as 'DAILY' | 'WEEKLY' | 'MONTHLY');
-        }
-
-        if (filter.subtype) {
-            query = query.where("tasks.subtype", "=", filter.subtype as 'pre-opening' | 'pre-closing');
-        }
-
         if (filter.branchId) {
             query = query.where("task_sessions.branch_id", "=", filter.branchId);
         }
@@ -204,11 +209,20 @@ export class TaskRepository implements ITaskRepository {
             query = query.where("task_sessions.status", "=", filter.status as 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'APPROVED' | 'REJECTED');
         }
 
+        // if (filter.type) {
+        //     query = query.where("task_sessions.type", "=", filter.type as 'DAILY' | 'WEEKLY' | 'MONTHLY');
+        // }
+
+        // if (filter.subtype) {
+        //     query = query.where("tasks.subtype", "=", filter.subtype as 'pre-opening' | 'pre-closing');
+        // }
+
         const sessions = await query
             .select([
                 "task_sessions.id as id",
                 "task_sessions.session_date as date",
                 "task_sessions.status as status",
+                "task_sessions.type as sessionType",
                 "tasks.id as taskId",
                 "tasks.title as taskTitle",
                 "tasks.description as taskDescription",

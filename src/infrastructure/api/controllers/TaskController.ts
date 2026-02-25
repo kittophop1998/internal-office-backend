@@ -11,8 +11,8 @@ export class TaskController {
     async create(req: AuthenticatedRequest, res: Response) {
         try {
             const userId = Number(req.user?.id);
-            const taskData = req.body;
-            await this.taskService.create(userId, taskData);
+
+            await this.taskService.create(userId, req.body);
 
             ResponseUtil.success(res, null, 'Task created successfully');
         } catch (error: any) {
@@ -20,12 +20,17 @@ export class TaskController {
         }
     }
 
-    async update(req: Request, res: Response) {
+    async update(req: AuthenticatedRequest, res: Response) {
         try {
+            const userId = Number(req.user?.id);
             const taskId = Number(req.params.id);
-            const taskData = req.body;
-            await this.taskService.update(taskId, taskData);
+            const input ={
+                taskId,
+                ...req.body
+            };
 
+            await this.taskService.update(userId, input);
+            
             ResponseUtil.success(res, null, 'Task updated successfully');
         } catch (error: any) {
             ResponseUtil.error(res, 'Task update failed', 500, error.message);
@@ -80,23 +85,13 @@ export class TaskController {
         }
     }
 
-    async assignTask(req: Request, res: Response) {
-        try {
-            const assignmentData = req.body;
-            await this.taskService.assignTask(assignmentData);
-
-            ResponseUtil.success(res, null, 'Task assigned successfully');
-        } catch (error: any) {
-            ResponseUtil.error(res, 'Task assignment failed', 500, error.message);
-        }
-    }
-
     // ##### Controller For Tasks Sessions
     async createTaskSession(req: AuthenticatedRequest, res: Response) {
         try {
             const userId = Number(req.user?.id);
             const type = req.body.type as string;
             const branchId = Number(req.body.branchId);
+
             await this.taskService.createTaskSession(userId, type, branchId);
 
             ResponseUtil.success(res, null, 'Session created successfully');
@@ -105,36 +100,13 @@ export class TaskController {
         }
     }
 
-    async checkTaskSessionExists(req: AuthenticatedRequest, res: Response) {
-        try {
-            const userId = Number(req.user?.id);
-            const branchId = Number(req.query.branchId);
-            const type = req.query.type as string;
-
-            const filter = {
-                userId,
-                type,
-                branchId
-            };
-            const exists = await this.taskService.checkTaskSessionExists(filter);
-
-            ResponseUtil.success(res, { exists }, 'Session existence checked successfully');
-        } catch (error: any) {
-            ResponseUtil.error(res, 'Failed to check session existence', 500, error.message);
-        }
-    }
-
     async getTaskSessions(req: AuthenticatedRequest, res: Response) {
         try {
             const userId = Number(req.user?.id);
             const branchId = Number(req.query.branchId);
-            const type = req.query.type as string;
-            const subtype = req.query.subtype as string ?? null;
-
+            
             const filter = {
                 userId,
-                type,
-                subtype,
                 branchId
             };
             const sessions = await this.taskService.getTaskSessions(filter);

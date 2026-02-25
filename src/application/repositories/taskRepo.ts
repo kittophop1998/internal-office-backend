@@ -6,10 +6,10 @@ export interface ITaskRepository {
     delete(taskId: number): Promise<void>;
 
     getTaskAssignments(userId: number, filter?: any): Promise<any[]>;
-    assignTask(input: any): Promise<void>;
+    assignTask(taskId: number, input: any): Promise<void>;
 
     createTaskSession(input: any): Promise<void>;
-    isTaskSessionExists(filter: any, date: string): Promise<boolean>;
+    isTaskSessionExists(filter: any): Promise<boolean>;
     getTaskSessions(filter: any): Promise<any[]>;
     updateTaskSessions(inputs: any[]): Promise<void>;
     taskSessionAttachments(taskSessionId: number, image_url: string): Promise<void>;
