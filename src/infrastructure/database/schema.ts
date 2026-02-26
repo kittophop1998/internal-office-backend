@@ -123,6 +123,7 @@ export interface TaskGroupTable {
   id: Generated<number>
   name: string
   percent_weight: number
+  rating_criteria: number
   created_at: Generated<Date>
   updated_at: Date
   deleted_at: Date | null
