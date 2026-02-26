@@ -78,22 +78,26 @@ export class UserService {
         };
     }
 
-    async updateUserProfile(userId: number, profileData: Partial<any>) {
+    async updateUserProfile(userId: number, input: Partial<any>) {
         const userToSave = {
-            full_name: profileData.fullName,
-            email: profileData.email,
-            department_id: profileData.departmentId,
-            role_id: profileData.roleId
+            full_name: input.fullName,
+            email: input.email,
+            department_id: input.departmentId,
+            role_id: input.roleId
         };
 
         await this.userRepository.update(userId, userToSave);
 
-        const updateUserBranches = profileData.branchIds.map((branchId: number) => ({
+        const updateUserBranches = input.branchIds.map((branchId: number) => ({
             user_id: userId,
             branch_id: branchId,
         }));
 
         await this.userRepository.userbranchCreate(userId, updateUserBranches);
         console.log('4')
+    }
+
+    async updateCurrentBranchIdByUserId(userId: number, currentBranchId: number) {
+        await this.userRepository.updateCurrentBranchId(userId, currentBranchId);
     }
 }

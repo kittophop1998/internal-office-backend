@@ -2,31 +2,6 @@ import { IUserRepository } from "../../application/repositories/userRepo";
 import { db } from "./maria";
 
 export class UserRepository implements IUserRepository {
-
-    private groupUserBranches(rows: any[]): any[] {
-        const map = new Map<number, any>();
-
-        for (const row of rows) {
-            if (!map.has(row.id)) {
-                const { branchId, branchName, ...userFields } = row;
-                map.set(row.id, {
-                    ...userFields,
-                    branches: [],
-                });
-            }
-
-            if (row.branchId !== null && row.branchId !== undefined) {
-                map.get(row.id).branches.push({
-                    branchId: row.branchId,
-                    branchName: row.branchName,
-                });
-            }
-        }
-
-        return Array.from(map.values());
-    }
-
-
     async create(user: any): Promise<any> {
         const createdUser = await db
             .insertInto("users")
@@ -50,7 +25,7 @@ export class UserRepository implements IUserRepository {
             query = query.where('users.role_id', '=', Number(filters.roleId));
         }
 
-        const rows = await query
+        return query
             .select([
                 'users.id as id',
                 'users.username as username',
@@ -65,17 +40,13 @@ export class UserRepository implements IUserRepository {
                 'branches.name as branchName',
             ])
             .execute();
-
-        return this.groupUserBranches(rows);
     }
 
     async findByUsername(username: string): Promise<any | null> {
-        const rows = await db
+        return db
             .selectFrom('users')
             .innerJoin('roles', 'users.role_id', 'roles.id')
             .innerJoin('departments', 'users.department_id', 'departments.id')
-            .leftJoin('user_branches', 'users.id', 'user_branches.user_id')
-            .leftJoin('branches', 'user_branches.branch_id', 'branches.id')
             .select([
                 'users.id as id',
                 'users.username as username',
@@ -84,25 +55,20 @@ export class UserRepository implements IUserRepository {
                 'users.department_id as departmentId',
                 'users.role_id as roleId',
                 'users.password_hash as passwordHash',
+                'users.current_branch_id as currentBranchId',
                 'roles.code as roleCode',
                 'roles.name as roleName',
-                'branches.id as branchId',
-                'branches.name as branchName',
                 'departments.name as departmentName',
             ])
             .where('users.username', '=', username)
-            .execute();
-
-        return this.groupUserBranches(rows)[0] || null;
+            .executeTakeFirst();
     }
 
     async findById(id: number): Promise<any | null> {
-        const rows = await db
+        return db
             .selectFrom('users')
             .innerJoin('roles', 'users.role_id', 'roles.id')
             .innerJoin('departments', 'users.department_id', 'departments.id')
-            .leftJoin('user_branches', 'users.id', 'user_branches.user_id')
-            .leftJoin('branches', 'user_branches.branch_id', 'branches.id')
             .select([
                 'users.id as id',
                 'users.username as username',
@@ -110,16 +76,12 @@ export class UserRepository implements IUserRepository {
                 'users.email as email',
                 'users.department_id as departmentId',
                 'users.role_id as roleId',
-                'users.branch_id as branchId',
+                'users.current_branch_id as currentBranchId',
                 'roles.code as roleCode',
                 'roles.name as roleName',
-                'branches.name as branchName',
-                'departments.name as departmentName',
             ])
             .where('users.id', '=', id)
-            .execute();
-
-        return this.groupUserBranches(rows)[0] || null;
+            .executeTakeFirst();
     }
 
     async update(id: number, input: any): Promise<any> {
@@ -129,6 +91,14 @@ export class UserRepository implements IUserRepository {
             .where('id', '=', id)
             .execute();
     }
+
+    async updateCurrentBranchId(userId: number, currentBranchId: number): Promise<any> {
+        await db
+            .updateTable('users')
+            .set({ current_branch_id: currentBranchId })
+            .where('id', '=', userId)
+            .execute();
+    } 
 
     async userbranchCreate(userId: number, userBranch: any): Promise<any> {
         await db

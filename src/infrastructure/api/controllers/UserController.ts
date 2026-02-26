@@ -30,18 +30,6 @@ export class UserController {
         }
     }
 
-    async updateUserProfile(req: AuthenticatedRequest, res: Response) {
-        try {
-            const userId = Number(req.user?.id);
-            const profileData = req.body;
-            await this.userService.updateUserProfile(userId, profileData);
-
-            ResponseUtil.success(res, null, 'User profile updated successfully');
-        } catch (error: any) {
-            ResponseUtil.error(res, 'Failed to update user profile', 500, error.message);
-        }
-    }
-
     async getUsers(req: Request, res: Response) {
         try {
             const filters = req.query;
@@ -73,6 +61,18 @@ export class UserController {
             ResponseUtil.success(res, null, 'User updated successfully');
         } catch (error: any) {
             ResponseUtil.error(res, 'Failed to update user', 500, error.message);
+        }
+    }
+
+    async updateCurrentBranchIdByUserId(req: AuthenticatedRequest, res: Response) {
+        try {
+            const userId = Number(req.user?.id);
+            const currentBranchId = req.body.currentBranchId;
+            await this.userService.updateCurrentBranchIdByUserId(userId, currentBranchId);
+            
+            ResponseUtil.success(res, null, 'User profile updated successfully');
+        } catch (error: any) {
+            ResponseUtil.error(res, 'Failed to update user profile', 500, error.message);
         }
     }
 }

@@ -25,6 +25,7 @@ export function setupUserRoute() {
     /**
      * Routes
      */
+    router.put("/update/current-branch", authMiddleware, (req, res) => userController.updateCurrentBranchIdByUserId(req, res));
     router.post("/", authMiddleware, (req, res) => userController.createUser(req, res));
     router.get("/", authMiddleware, (req, res) => userController.getUsers(req, res));
     router.get("/:id", authMiddleware, (req, res) => userController.getUserById(req, res));

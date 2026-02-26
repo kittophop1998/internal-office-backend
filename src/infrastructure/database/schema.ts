@@ -1,5 +1,4 @@
 import {
-  ColumnType,
   Generated,
   Selectable,
 } from 'kysely'
@@ -25,7 +24,7 @@ export interface UserTable {
   email: string
   department_id: number | null
   role_id: number | null
-  branch_id: number | null
+  current_branch_id: number | null
   created_at: Generated<Date>
   updated_at: Date
   deleted_at: Date | null
