@@ -30,7 +30,7 @@ export class AuthService {
                 full_name: `${erpUser.name} ${erpUser.surname}`,
                 email: `${erpUser.username}@changsiamthailand.com`,
                 department_id: 1,
-                role_id: 1,
+                role_id: 4,
             };
             await this.userRepository.create(newUser);
             // ##############################################
