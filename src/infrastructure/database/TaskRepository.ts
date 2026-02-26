@@ -209,9 +209,9 @@ export class TaskRepository implements ITaskRepository {
             query = query.where("task_sessions.status", "=", filter.status as 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'APPROVED' | 'REJECTED');
         }
 
-        // if (filter.type) {
-        //     query = query.where("task_sessions.type", "=", filter.type as 'DAILY' | 'WEEKLY' | 'MONTHLY');
-        // }
+        if (filter.type) {
+            query = query.where("task_sessions.type", "=", filter.type as 'DAILY' | 'WEEKLY' | 'MONTHLY');
+        }
 
         // if (filter.subtype) {
         //     query = query.where("tasks.subtype", "=", filter.subtype as 'pre-opening' | 'pre-closing');
