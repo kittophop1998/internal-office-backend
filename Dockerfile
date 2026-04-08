@@ -1,38 +1,45 @@
-# Build stage (optional - for type checking and validation)
+# --- Stage 1: Builder ---
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Copy package files first (better caching)
+# Copy package files เพื่อใช้ประโยชน์จาก Layer Caching
 COPY package*.json ./
 
-# Install all dependencies (including devDependencies for type checking)
+# ติดตั้ง dependencies ทั้งหมดเพื่อใช้ในการตรวจสอบ/จัดการไฟล์
 RUN npm ci
 
-# Copy source code
+# Copy source code และ config
 COPY tsconfig.json ./
 COPY src ./src
 COPY main.ts ./
 
-# Optional: Type check (uncomment if you want to validate types during build)
-# RUN npm run build
+# (Optional) หากต้องการทำ Type Check สามารถเพิ่มคำสั่งได้ที่นี่
+# RUN npx tsc --noEmit
 
-# Production stage
-FROM node:20-alpine
+
+# --- Stage 2: Runtime ---
+FROM node:20-alpine AS runtime
 WORKDIR /app
 
-# Copy package files
+# กำหนดสภาพแวดล้อมเป็น production
+ENV NODE_ENV=production
+
+# Copy เฉพาะ package files มาลง production deps
 COPY package*.json ./
 
-# Install production dependencies + tsx (needed to run TypeScript)
-RUN npm ci --omit=dev && npm install tsx
+# ติดตั้งเฉพาะ production dependencies และ tsx สำหรับรัน TS
+RUN npm ci --omit=dev && npm install -g tsx
 
-# Copy source code
-COPY tsconfig.json ./
-COPY src ./src
-COPY main.ts ./
+# Copy source code จาก builder stage (หรือจาก local ก็ได้ แต่แนะนำจาก builder เพื่อความชัวร์)
+COPY --from=builder /app/src ./src
+COPY --from=builder /app/main.ts ./main.ts
+COPY --from=builder /app/tsconfig.json ./tsconfig.json
+
+# ใช้ User ที่ปลอดภัย (node user มีมาให้ใน alpine อยู่แล้ว)
+USER node
 
 # Expose port
 EXPOSE 8000
 
-# Run the application with tsx
-CMD ["npx", "tsx", "main.ts"]
+# รันแอปพลิเคชัน
+CMD ["tsx", "main.ts"]
